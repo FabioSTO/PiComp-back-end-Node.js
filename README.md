@@ -27,15 +27,7 @@ CREATE TABLE users (
 );
 ```
 
-> mysql> describe users;
-> | Field      | Type         | Null | Key | Default | Extra           |
-> |------------|--------------|------|-----|---------|-----------------|
-> | id         | int          | NO   | PRI | NULL    | auto_increment |
-> | username   | varchar(50)  | YES  | UNI | NULL    |                 |
-> | email      | varchar(100) | YES  |     | NULL    |                 |
-> | password   | varchar(100) | YES  |     | NULL    |                 |
-> | profilePic | varchar(100) | YES  |     | NULL    |                 |
-> | submitted  | tinyint(1)   | NO   |     | 0       |                 |
+
 
 
 ```
@@ -49,13 +41,7 @@ CREATE TABLE competitors (
 );
 ```
 
-> mysql> desc competitors;
-> | Field      | Type         | Null | Key | Default | Extra |
-> |------------|--------------|------|-----|---------|-------|
-> | imageRoute | varchar(100) | NO   | PRI | NULL    |       |
-> | imageDesc  | varchar(100) | NO   |     | NULL    |       |
-> | userID     | int          | NO   | MUL | NULL    |       |
-> | points     | int          | NO   |     | NULL    |       |
+
 
 
 ```
@@ -69,6 +55,23 @@ CREATE TABLE tops (
     ON DELETE SET NULL
 );
 ```
+> mysql> describe users;
+> | Field      | Type         | Null | Key | Default | Extra           |
+> |------------|--------------|------|-----|---------|-----------------|
+> | id         | int          | NO   | PRI | NULL    | auto_increment |
+> | username   | varchar(50)  | YES  | UNI | NULL    |                 |
+> | email      | varchar(100) | YES  |     | NULL    |                 |
+> | password   | varchar(100) | YES  |     | NULL    |                 |
+> | profilePic | varchar(100) | YES  |     | NULL    |                 |
+> | submitted  | tinyint(1)   | NO   |     | 0       |                 |
+
+> mysql> desc competitors;
+> | Field      | Type         | Null | Key | Default | Extra |
+> |------------|--------------|------|-----|---------|-------|
+> | imageRoute | varchar(100) | NO   | PRI | NULL    |       |
+> | imageDesc  | varchar(100) | NO   |     | NULL    |       |
+> | userID     | int          | NO   | MUL | NULL    |       |
+> | points     | int          | NO   |     | NULL    |       |
 
 > mysql> desc tops;
 > | Field      | Type         | Null | Key | Default | Extra |
