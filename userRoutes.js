@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 const con = require("./db");
 const { hashPassword, comparePasswords } = require("./bcryptUtils");
+const AWS = require('aws-sdk');
 
 router.post("/registerAccount", (request, response) => {
   const { name, email, password, profilePic } = request.body;
@@ -77,6 +78,8 @@ function getUserID(username, callback) {
   });
 }
 
+//function uploadImageToS3(userID, imageComp, callback) {}
+
 router.post("/submitImage", (request, response) => {
   const { imageName, imageComp, username } = request.body;
   const points = 0;
@@ -86,7 +89,7 @@ router.post("/submitImage", (request, response) => {
       console.error(err);
       response.status(500).json({ message: "Error al obtener el ID de usuario" });
     } else {
-      const post = { imageRoute: imageComp, imageDesc: imageName, userID, points };
+      /*const post = { imageRoute: imageComp, imageDesc: imageName, userID, points };
       const submitImageQuery = "INSERT INTO competitors SET ?";
       con.query(submitImageQuery, post, (err) => {
         if (err) {
@@ -95,7 +98,7 @@ router.post("/submitImage", (request, response) => {
         } else {
           response.status(201).json({ message: "Foto enviada" });
         }
-      });
+      });*/
     }
   });
 });
