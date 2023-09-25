@@ -3,7 +3,8 @@ const express = require("express");
 const router = express.Router();
 const con = require("./db");
 const { hashPassword, comparePasswords } = require("./bcryptUtils");
-const AWS = require('aws-sdk');
+//const AWS = require('aws-sdk');
+const s3 = require('./awsConfig')
 
 router.post("/registerAccount", (request, response) => {
   const { name, email, password, profilePic } = request.body;
@@ -78,7 +79,27 @@ function getUserID(username, callback) {
   });
 }
 
-//function uploadImageToS3(userID, imageComp, callback) {}
+function uploadImageToS3(userID, imageName, imageComp, callback) { // Subir imagen al bucket
+  
+  const params = {
+    Bucket: 'picomp-bucket',
+    Key: `${userID}_${imageName}`, 
+    Body: Buffer.from(imageComp, 'base64'), // Decodifica la imagen Base64
+    //ContentEncoding: 'base64',
+    //ContentType: 'image/jpeg', // Cambia esto según el tipo de imagen
+    //ACL: 'public-read', // Esto depende de tu política de acceso
+  };
+
+  s3.upload(params, (err, data) => {
+    if (err) {
+      console.error(err);
+      callback(err);
+    } else {
+      console.log('Imagen cargada exitosamente:', data.Location);
+      callback(null, data.Location); // Envía la URL de la imagen cargada
+    }
+  });
+}
 
 router.post("/submitImage", (request, response) => {
   const { imageName, imageComp, username } = request.body;
@@ -89,18 +110,37 @@ router.post("/submitImage", (request, response) => {
       console.error(err);
       response.status(500).json({ message: "Error al obtener el ID de usuario" });
     } else {
-      /*const post = { imageRoute: imageComp, imageDesc: imageName, userID, points };
-      const submitImageQuery = "INSERT INTO competitors SET ?";
-      con.query(submitImageQuery, post, (err) => {
+      uploadImageToS3(userID, imageName, imageComp, (err, imageUrl) => {
         if (err) {
           console.error(err);
-          response.status(500).json({ message: "Error al enviar imagen" });
+          response.status(500).json({ message: "Error al cargar la imagen en S3" });
         } else {
-          response.status(201).json({ message: "Foto enviada" });
+          response.status(200).json({ message: "Imagen cargada exitosamente", imageUrl });
+          const post = { imageRoute: imageUrl, imageDesc: imageName, userID, points };
+          const submitImageQuery = "INSERT INTO competitors SET ?";
+          con.query(submitImageQuery, post, (err) => {
+            if (err) {
+              console.error(err);
+              response.status(500).json({ message: "Error al enviar imagen" });
+            } else {
+              response.status(201).json({ message: "Foto enviada" });
+            }
+          });
         }
-      });*/
+      });
     }
   });
 });
 
 module.exports = router;
+
+/*const post = { imageRoute: imageComp, imageDesc: imageName, userID, points };
+const submitImageQuery = "INSERT INTO competitors SET ?";
+con.query(submitImageQuery, post, (err) => {
+  if (err) {
+    console.error(err);
+    response.status(500).json({ message: "Error al enviar imagen" });
+  } else {
+    response.status(201).json({ message: "Foto enviada" });
+  }
+});*/
