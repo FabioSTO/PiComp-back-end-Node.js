@@ -23,7 +23,8 @@ CREATE TABLE users (
   email VARCHAR(100) NOT NULL,
   password VARCHAR(100) NOT NULL,
   profilePic VARCHAR(100) NOT NULL,
-  submitted BOOLEAN NOT NULL default FALSE
+  submitted BOOLEAN NOT NULL default FALSE,
+  voted BOOLEAN NOT NULL default FALSE
 );
 ```
 
@@ -64,6 +65,7 @@ CREATE TABLE tops (
 > | password   | varchar(100) | YES  |     | NULL    |                 |
 > | profilePic | varchar(100) | YES  |     | NULL    |                 |
 > | submitted  | tinyint(1)   | NO   |     | 0       |                 |
+> | voted      | tinyint(1)   | NO   |     | 0       |                 |
 
 > mysql> desc competitors;
 > | Field      | Type         | Null | Key | Default | Extra |
@@ -95,4 +97,9 @@ DB_HOST=db.host
 DB_USER=root
 DB_PASSWORD=db.password
 DB_DATABASE=db.name
+
+#AWS CONFIG
+AWS_ACCESS_KEY_ID=<accessKey>
+AWS_SECRET_ACCESS_KEY=<secretAccessKey>
+REGION=<bucketRegion>
 ```
