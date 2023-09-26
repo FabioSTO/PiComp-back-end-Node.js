@@ -4,7 +4,73 @@ const router = express.Router();
 const con = require("./db");
 const { hashPassword, comparePasswords } = require("./bcryptUtils");
 //const AWS = require('aws-sdk');
-const s3 = require('./awsConfig')
+const s3 = require('./awsConfig');
+const fs = require('fs');
+const path = require('path');
+
+function uploadImageToS3(userID, imageName, imageComp, callback) { // Subir imagen al bucket
+  
+  //const imageDecoded = Buffer.from(imageComp, 'base64'); // Decodifica la imagen Base64
+
+  // Guarda la imagen decodificada como un archivo en el sistema de archivos local
+  //const filePath = path.join(__dirname, 'temp', `${userID}_${imageName}`);
+  //fs.writeFileSync(filePath, decodedImage);
+
+  const params = {
+    Bucket: 'picomp-bucket',
+    Key: `${userID}_${imageName}`, 
+    //Body: fs.createReadStream(filePath),
+  };
+
+  s3.upload(params, (err, data) => {
+    // Elimina el archivo temporal después de subirlo a S3
+    //fs.unlinkSync(filePath);
+    if (err) {
+      console.error(err);
+      callback(err);
+    } else {
+      console.log('Imagen cargada exitosamente:', data.Location);
+      callback(null, data.Location); // Envía la URL de la imagen cargada
+    }
+  });
+}
+
+function uploadProfilePicToS3(name, profilePic, callback) { // Subir profilePic al bucket
+  
+  const imageDecoded = Buffer.from(profilePic.split(',')[1], 'base64'); // Decodifica la imagen Base64
+
+  const params = {
+    Bucket: 'picomp-bucket',
+    Key: `${name}_profilePic.jpg`, 
+    ContentType: 'image/jpeg',
+    Body: imageDecoded, // Decodifica la imagen Base64
+  };
+
+  s3.upload(params, (err, data) => {
+    if (err) {
+      console.error(err);
+      callback(err);
+    } else {
+      console.log('Imagen cargada exitosamente:', data.Location);
+      callback(null, data.Location); // Envía la URL de la imagen cargada
+    }
+  });
+}
+
+
+// Obtener URL temporal de la imagen
+function getProfilePicFromS3(keyImageUrl) { 
+
+  const params = {
+    Bucket: 'picomp-bucket',
+    Key: `${keyImageUrl}`,
+  };
+
+  const presignedUrl = s3.getSignedUrl('getObject', params);
+  console.log(presignedUrl);
+
+  return presignedUrl;
+}
 
 router.post("/registerAccount", (request, response) => {
   const { name, email, password, profilePic } = request.body;
@@ -15,15 +81,25 @@ router.post("/registerAccount", (request, response) => {
       console.error(err);
       response.status(500).json({ message: "Error al registrar el usuario" });
     } else {
-      const post = { username: name, email, password: hashedPassword, profilePic };
-
-      const sql = "INSERT INTO users SET ?";
-      con.query(sql, post, (err) => {
+      uploadProfilePicToS3(name, profilePic, (err, imageUrl) => {
         if (err) {
           console.error(err);
-          response.status(500).json({ message: "Error al registrar el usuario" });
+          response.status(500).json({ message: "Error al cargar la imagen en S3" });
         } else {
-          response.status(201).json({ message: "Usuario registrado correctamente" });
+          response.status(200).json({ message: "Imagen cargada exitosamente", imageUrl });
+          const partesURL = imageUrl.split('/');
+          const keyImageUrl = partesURL[partesURL.length - 1]; // Última parte de la url
+          const post = { username: name, email, password: hashedPassword, profilePic: keyImageUrl };
+        
+          const sql = "INSERT INTO users SET ?";
+          con.query(sql, post, (err) => {
+            if (err) {
+              console.error(err);
+              response.status(500).json({ message: "Error al registrar el usuario" });
+            } else {
+              response.status(201).json({ message: "Usuario registrado correctamente" });
+            }
+          });
         }
       });
     }
@@ -52,7 +128,10 @@ router.post("/loginAccount", (request, response) => {
           response.status(500).json({ message: "Error al comparar contraseñas" });
         } else if (passwordsMatch) {
           const { username, profilePic } = results[0];
-          response.status(200).json({ message: "Usuario logueado correctamente", username, profilePic });
+          
+          const presignedUrl = getProfilePicFromS3(profilePic);
+
+          response.status(200).json({ message: "Usuario logueado correctamente", username, profilePic: presignedUrl });
         } else {
           response.status(401).json({ message: "Contraseña incorrecta" });
         }
@@ -75,28 +154,6 @@ function getUserID(username, callback) {
       } else {
         callback(new Error("Usuario no encontrado"), null);
       }
-    }
-  });
-}
-
-function uploadImageToS3(userID, imageName, imageComp, callback) { // Subir imagen al bucket
-  
-  const params = {
-    Bucket: 'picomp-bucket',
-    Key: `${userID}_${imageName}`, 
-    Body: Buffer.from(imageComp, 'base64'), // Decodifica la imagen Base64
-    //ContentEncoding: 'base64',
-    //ContentType: 'image/jpeg', // Cambia esto según el tipo de imagen
-    //ACL: 'public-read', // Esto depende de tu política de acceso
-  };
-
-  s3.upload(params, (err, data) => {
-    if (err) {
-      console.error(err);
-      callback(err);
-    } else {
-      console.log('Imagen cargada exitosamente:', data.Location);
-      callback(null, data.Location); // Envía la URL de la imagen cargada
     }
   });
 }
