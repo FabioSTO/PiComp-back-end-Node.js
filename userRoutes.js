@@ -5,29 +5,24 @@ const con = require("./db");
 const { hashPassword, comparePasswords } = require("./bcryptUtils");
 //const AWS = require('aws-sdk');
 const s3 = require('./awsConfig');
-const fs = require('fs');
-const path = require('path');
 
 function uploadImageToS3(userID, imageName, imageComp, callback) { // Subir imagen al bucket
   
-  //const imageDecoded = Buffer.from(imageComp, 'base64'); // Decodifica la imagen Base64
-
-  // Guarda la imagen decodificada como un archivo en el sistema de archivos local
-  //const filePath = path.join(__dirname, 'temp', `${userID}_${imageName}`);
-  //fs.writeFileSync(filePath, decodedImage);
+  const imageExtension = imageComp.split('/')[1].split(';')[0]; // Obtiene la extensión de la imagen a partir de la base64
+  const imageDecoded = Buffer.from(imageComp.split(',')[1], 'base64'); // Decodifica la imagen Base64
+  const imageNameUnderscored = imageName.replaceAll(" ", "_"); // Cambia los espacios por "_" para formalizar el nombre de la foto
 
   const params = {
     Bucket: 'picomp-bucket',
-    Key: `${userID}_${imageName}`, 
-    //Body: fs.createReadStream(filePath),
+    Key: `${userID}_${imageNameUnderscored}.${imageExtension}`, 
+    ContentType: 'image/*',
+    Body: imageDecoded,
   };
 
   s3.upload(params, (err, data) => {
-    // Elimina el archivo temporal después de subirlo a S3
-    //fs.unlinkSync(filePath);
     if (err) {
       console.error(err);
-      callback(err);
+      callback(err,null);
     } else {
       console.log('Imagen cargada exitosamente:', data.Location);
       callback(null, data.Location); // Envía la URL de la imagen cargada
@@ -37,19 +32,20 @@ function uploadImageToS3(userID, imageName, imageComp, callback) { // Subir imag
 
 function uploadProfilePicToS3(name, profilePic, callback) { // Subir profilePic al bucket
   
+  const imageExtension = profilePic.split('/')[1].split(';')[0]; // Obtiene la extensión de la imagen a partir de la base64
   const imageDecoded = Buffer.from(profilePic.split(',')[1], 'base64'); // Decodifica la imagen Base64
 
   const params = {
     Bucket: 'picomp-bucket',
-    Key: `${name}_profilePic.jpg`, 
-    ContentType: 'image/jpeg',
+    Key: `${name}_profilePic.${imageExtension}`, 
+    ContentType: 'image/*',
     Body: imageDecoded, // Decodifica la imagen Base64
   };
 
   s3.upload(params, (err, data) => {
     if (err) {
       console.error(err);
-      callback(err);
+      callback(err, null);
     } else {
       console.log('Imagen cargada exitosamente:', data.Location);
       callback(null, data.Location); // Envía la URL de la imagen cargada
@@ -58,7 +54,8 @@ function uploadProfilePicToS3(name, profilePic, callback) { // Subir profilePic 
 }
 
 
-// Obtener URL temporal de la imagen
+// Obtener URL temporal de la imagen para mostrarla en el login
+
 function getProfilePicFromS3(keyImageUrl) { 
 
   const params = {
@@ -86,7 +83,7 @@ router.post("/registerAccount", (request, response) => {
           console.error(err);
           response.status(500).json({ message: "Error al cargar la imagen en S3" });
         } else {
-          response.status(200).json({ message: "Imagen cargada exitosamente", imageUrl });
+          //response.status(200).json({ message: "Imagen cargada exitosamente", imageUrl }); // Comentado porque express no permite devolver 2 respuestas
           const partesURL = imageUrl.split('/');
           const keyImageUrl = partesURL[partesURL.length - 1]; // Última parte de la url
           const post = { username: name, email, password: hashedPassword, profilePic: keyImageUrl };
@@ -172,7 +169,6 @@ router.post("/submitImage", (request, response) => {
           console.error(err);
           response.status(500).json({ message: "Error al cargar la imagen en S3" });
         } else {
-          response.status(200).json({ message: "Imagen cargada exitosamente", imageUrl });
           const post = { imageRoute: imageUrl, imageDesc: imageName, userID, points };
           const submitImageQuery = "INSERT INTO competitors SET ?";
           con.query(submitImageQuery, post, (err) => {
@@ -190,14 +186,3 @@ router.post("/submitImage", (request, response) => {
 });
 
 module.exports = router;
-
-/*const post = { imageRoute: imageComp, imageDesc: imageName, userID, points };
-const submitImageQuery = "INSERT INTO competitors SET ?";
-con.query(submitImageQuery, post, (err) => {
-  if (err) {
-    console.error(err);
-    response.status(500).json({ message: "Error al enviar imagen" });
-  } else {
-    response.status(201).json({ message: "Foto enviada" });
-  }
-});*/
