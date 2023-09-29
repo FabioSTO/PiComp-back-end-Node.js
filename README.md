@@ -37,6 +37,7 @@ CREATE TABLE competitors (
   imageDesc VARCHAR(100) NOT NULL,
   userID INT NOT NULL,
   points INT NOT NULL,
+  date DATE NOT NULL,
   FOREIGN KEY(userID) REFERENCES USERS(ID)
     ON DELETE CASCADE
 );
@@ -56,10 +57,30 @@ CREATE TABLE tops (
     ON DELETE SET NULL
 );
 ```
+
+
+
+
+```
+CREATE TABLE votes (
+  imageRoute VARCHAR(100) NOT NULL,
+  userID INT NOT NULL,
+  votedPoints INT NOT NULL,
+  PRIMARY KEY (imageRoute, userID),
+  FOREIGN KEY(userID) REFERENCES USERS(ID)
+    ON DELETE CASCADE,
+  FOREIGN KEY(imageRoute) REFERENCES COMPETITORS(imageRoute)
+    ON DELETE CASCADE
+);
+```
+
+
+
+
 > mysql> describe users;
 > | Field      | Type         | Null | Key | Default | Extra           |
 > |------------|--------------|------|-----|---------|-----------------|
-> | id         | int          | NO   | PRI | NULL    | auto_increment |
+> | id         | int          | NO   | PRI | NULL    | auto_increment  |
 > | username   | varchar(50)  | YES  | UNI | NULL    |                 |
 > | email      | varchar(100) | YES  |     | NULL    |                 |
 > | password   | varchar(100) | YES  |     | NULL    |                 |
@@ -83,6 +104,14 @@ CREATE TABLE tops (
 > | userID     | int          | YES  | MUL | NULL    |       |
 > | position   | int          | NO   |     | NULL    |       |
 > | date       | date         | NO   |     | NULL    |       |
+
+> mysql> desc votes;
+> | Field       | Type         | Null | Key | Default | Extra |
+> |-------------|--------------|------|-----|---------|-------|
+> | imageRoute  | varchar(100) | NO   | PRI | NULL    |       |
+> | userID      | int          | NO   | PRI | NULL    |       |
+> | votedPoints | int          | NO   |     | NULL    |       |
+
 
 #
 
