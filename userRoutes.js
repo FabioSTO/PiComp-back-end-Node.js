@@ -66,7 +66,7 @@ router.post("/loginAccount", (request, response) => {
   const { email, password } = request.body;
 
   // Obtener datos de usuario por correo electrónico
-  const findUserQuery = "SELECT username, password, profilePic, email, submitted, voted FROM users WHERE email = ?";
+  const findUserQuery = "SELECT id, username, password, profilePic, email, submitted, voted FROM users WHERE email = ?";
   con.query(findUserQuery, [email], (err, results) => {
     if (err) {
       console.error(err);
@@ -82,11 +82,11 @@ router.post("/loginAccount", (request, response) => {
           console.error(compareErr);
           response.status(500).json({ message: "Error al comparar contraseñas" });
         } else if (passwordsMatch) {
-          const { username, profilePic, email, submitted, voted } = results[0];
+          const { id, username, profilePic, email, submitted, voted } = results[0];
           
           const presignedUrl = s3Utils.getProfilePicFromS3(profilePic);
 
-          response.status(200).json({ message: "Usuario logueado correctamente", username, profilePic: presignedUrl, email, submitted, voted });
+          response.status(200).json({ message: "Usuario logueado correctamente", id, username, profilePic: presignedUrl, email, submitted, voted });
         } else {
           response.status(401).json({ message: "Contraseña incorrecta" });
         }

@@ -64,6 +64,21 @@ function getProfilePicFromS3(keyImageUrl) {
   return presignedUrl;
 }
 
+// Obtener URL temporal de la imagen para mostrarla en el login
+
+function getImageFromS3(keyImageUrl) { 
+
+  const params = {
+    Bucket: 'picomp-bucket',
+    Key: `${keyImageUrl}`,
+  };
+
+  const presignedUrl = s3.getSignedUrl('getObject', params);
+  console.log(presignedUrl);
+
+  return presignedUrl;
+}
+
 function getUserID(username, callback) {
   const findIDQuery = "SELECT id FROM users WHERE username = ?"
 
@@ -99,7 +114,7 @@ function updateSubmittedFlagTrue (userID) {
 module.exports = {
   uploadImageToS3,
   uploadProfilePicToS3,
-  getProfilePicFromS3,
+  getImageFromS3,
   getUserID,
   updateSubmittedFlagTrue,
 };

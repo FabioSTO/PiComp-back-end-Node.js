@@ -45,7 +45,6 @@ async function distributeImages() {
                 }
               }
               resolve(userImagePairs);
-              //return userImagePairs;
             }
           });
         }
