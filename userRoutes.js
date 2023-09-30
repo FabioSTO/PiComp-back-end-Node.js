@@ -3,11 +3,27 @@ const router = express.Router();
 const con = require("./db");
 const { hashPassword, comparePasswords } = require("./bcryptUtils");
 const s3Utils = require('./s3Utils');
+const imageDistributionUtils = require('./tasks/imageDistributionUtils'); 
+
 
 // Muestra imágenes para votar
-router.post("/showImagesToVote", (request, response) => {
-  const {  } = request.body;
+router.get("/showImagesToVote", async (request, response) => {
+  try {
+    // Distribución a las 00:00 para repartir imágenes
+  const allImagesDistributed = await imageDistributionUtils.distributeImages();
+  console.log(allImagesDistributed);
+  
+  if (allImagesDistributed) {
+    response.status(200).json({ allImagesDistributed: allImagesDistributed });
+  } else {
+    response.status(500).json({ error: "La distribución de imágenes no se ha completado aún." });
+  }
+  } catch (error) {
+    response.status(500).json({ error: "Error en la distribución de imágenes." });
+  }
+
 });
+
 
 // Registro de nuevo usuario
 router.post("/registerAccount", (request, response) => {
