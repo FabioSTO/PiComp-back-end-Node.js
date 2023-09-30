@@ -1,4 +1,5 @@
 const s3 = require('./awsConfig');
+const con = require("./db");
 
 function uploadImageToS3(userID, imageName, imageComp, callback) { // Subir imagen al bucket
   

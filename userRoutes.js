@@ -84,6 +84,10 @@ router.post("/submitImage", (request, response) => {
   const { imageName, imageComp, username } = request.body;
   const points = 0;
 
+  // Obtiene la fecha actual en el formato 'YYYY-MM-DD'
+  const currDate = new Date();
+  const date = currDate.toISOString().slice(0, 10);
+
   s3Utils.getUserID(username, (err, userID) => {
     if (err) {
       console.error(err);
@@ -94,7 +98,7 @@ router.post("/submitImage", (request, response) => {
           console.error(err);
           response.status(500).json({ message: "Error al cargar la imagen en S3" });
         } else {
-          const post = { imageRoute: imageUrl, imageDesc: imageName, userID, points };
+          const post = { imageRoute: imageUrl, imageDesc: imageName, userID, points, date };
           const submitImageQuery = "INSERT INTO competitors SET ?";
           con.query(submitImageQuery, post, (err) => {
             if (err) {
