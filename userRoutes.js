@@ -108,6 +108,7 @@ router.post("/submitImage", (request, response) => {
               response.status(201).json({ message: "Foto enviada" });
             }
           });
+          s3Utils.updateSubmittedFlagTrue(userID);
         }
       });
     }

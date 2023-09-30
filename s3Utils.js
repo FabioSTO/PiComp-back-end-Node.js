@@ -82,9 +82,24 @@ function getUserID(username, callback) {
   });
 }
 
+// Actualizar estado de submitted a True
+function updateSubmittedFlagTrue (userID) {
+  const updateSubmittedFlag = "UPDATE users SET submitted = TRUE WHERE id = ?";
+  
+  con.query(updateSubmittedFlag, userID, (err) => {
+    if (err) {
+      console.error(err);
+    } else {
+      console.error("Campo submitted actualizado");
+    }
+  });
+}
+
+
 module.exports = {
   uploadImageToS3,
   uploadProfilePicToS3,
   getProfilePicFromS3,
   getUserID,
+  updateSubmittedFlagTrue,
 };
