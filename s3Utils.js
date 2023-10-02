@@ -115,6 +115,7 @@ module.exports = {
   uploadImageToS3,
   uploadProfilePicToS3,
   getImageFromS3,
+  getProfilePicFromS3,
   getUserID,
   updateSubmittedFlagTrue,
 };
