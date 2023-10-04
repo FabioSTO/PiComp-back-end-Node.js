@@ -1,5 +1,6 @@
 const cron = require('node-cron');
 const con = require("../db");
+const s3Utils = require('../s3Utils');
 
 async function distributeImages() {
 
@@ -7,6 +8,7 @@ async function distributeImages() {
 
     // Obtiene la fecha de ayer en el formato 'YYYY-MM-DD'
     const probando = new Date();
+    probando.setDate(probando.getDate() - 4);
     
     const yesterDate = new Date();
     yesterDate.setDate(yesterDate.getDate() - 1);
@@ -35,12 +37,15 @@ async function distributeImages() {
               for (const usuarioRow of results) { 
                 for (const imagenRow of results) {
                   const usuario = usuarioRow.userID;
-                  const imagen = imagenRow.imageRoute;
+                  const image = imagenRow.imageRoute;
+                  const imageSplit = image.split('/');
+                  const imagen = imageSplit[imageSplit.length - 1];
                   
                   if (usuario == getFirstPartOfId(imagen)) { // Descartar aquella imagen que pertenezca al propio usuario
                     continue;
                   } else {
-                    userImagePairs.push({ usuario, imagen });
+                    const presignedUrl = s3Utils.getImageFromS3(imagen);
+                    userImagePairs.push({ usuario, imagen: presignedUrl });
                   }                
                 }
               }

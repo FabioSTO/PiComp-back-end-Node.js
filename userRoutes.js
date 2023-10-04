@@ -25,6 +25,14 @@ router.get("/showImagesToVote", async (request, response) => {
 });
 
 
+// Mandar votos a imágenes
+router.post("/sendVotes", (request, response) => {
+  const { imageRoute, userID } = request.body;
+
+  
+});
+
+
 // Registro de nuevo usuario
 router.post("/registerAccount", (request, response) => {
   const { name, email, password, profilePic } = request.body;
