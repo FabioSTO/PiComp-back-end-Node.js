@@ -8,7 +8,7 @@ async function distributeImages() {
 
     // Obtiene la fecha de ayer en el formato 'YYYY-MM-DD'
     const probando = new Date();
-    probando.setDate(probando.getDate() - 4);
+    probando.setDate(probando.getDate() - 8);
     
     const yesterDate = new Date();
     yesterDate.setDate(yesterDate.getDate() - 1);

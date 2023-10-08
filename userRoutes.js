@@ -3,7 +3,8 @@ const router = express.Router();
 const con = require("./db");
 const { hashPassword, comparePasswords } = require("./bcryptUtils");
 const s3Utils = require('./s3Utils');
-const imageDistributionUtils = require('./tasks/imageDistributionUtils'); 
+const imageDistributionUtils = require('./tasks/imageDistributionUtils');
+const imageVoteUtils = require('./tasks/imageVoteUtils'); 
 
 
 // Muestra imágenes para votar
@@ -27,8 +28,20 @@ router.get("/showImagesToVote", async (request, response) => {
 
 // Mandar votos a imágenes
 router.post("/sendVotes", (request, response) => {
-  const { imageRoute, userID } = request.body;
+  const { userTopImages, userID } = request.body;
 
+  for (let i = 0; i < userTopImages.length; i++) {
+    const imageRoute = userTopImages[i];
+    const votedPoints = userTopImages.length - i; // 3,2,1 puntos
+
+    imageVoteUtils.insertVote(imageRoute, userID, votedPoints, response);
+
+  
+  }
+
+  s3Utils.updateVotedFlagTrue(userID);
+
+  response.status(201).json({ message: "Imágenes votadas correctamente" });
   
 });
 

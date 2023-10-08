@@ -110,6 +110,19 @@ function updateSubmittedFlagTrue (userID) {
   });
 }
 
+// Actualizar estado de submitted a True
+function updateVotedFlagTrue (userID) {
+  const updateVotedFlag = "UPDATE users SET voted = TRUE WHERE id = ?";
+  
+  con.query(updateVotedFlag, userID, (err) => {
+    if (err) {
+      console.error(err);
+    } else {
+      console.error("Campo voted actualizado");
+    }
+  });
+}
+
 
 module.exports = {
   uploadImageToS3,
@@ -118,4 +131,5 @@ module.exports = {
   getProfilePicFromS3,
   getUserID,
   updateSubmittedFlagTrue,
+  updateVotedFlagTrue,
 };
