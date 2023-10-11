@@ -5,7 +5,7 @@ const { hashPassword, comparePasswords } = require("./bcryptUtils");
 const s3Utils = require('./s3Utils');
 const imageDistributionUtils = require('./tasks/imageDistributionUtils');
 const imageVoteUtils = require('./tasks/imageVoteUtils'); 
-
+const voteCountingUtils = require('./tasks/voteCountingUtils'); 
 
 // Muestra imágenes para votar
 router.get("/showImagesToVote", async (request, response) => {
@@ -25,6 +25,23 @@ router.get("/showImagesToVote", async (request, response) => {
 
 });
 
+// Hace recuento de los votos y muestra top 3
+router.get("/countVotesAndShowTop3", async (request, response) => {
+  try {
+    // Distribución a las 00:00 para repartir imágenes
+  const top3Images = await voteCountingUtils.voteCounting();
+  console.log(top3Images);
+  
+  if (top3Images) {
+    response.status(200).json({ top3Images: top3Images });
+  } else {
+    response.status(500).json({ error: "El recuento de votos no se ha completado aún." });
+  }
+  } catch (error) {
+    response.status(500).json({ error: "Error en el recuento de votos." });
+  }
+
+});
 
 // Mandar votos a imágenes
 router.post("/sendVotes", (request, response) => {
