@@ -8,7 +8,7 @@ async function distributeImages() {
 
     // Obtiene la fecha de ayer en el formato 'YYYY-MM-DD'
     const probando = new Date();
-    probando.setDate(probando.getDate() - 8);
+    probando.setDate(probando.getDate() - 13);
     
     const yesterDate = new Date();
     yesterDate.setDate(yesterDate.getDate() - 1);
@@ -22,37 +22,59 @@ async function distributeImages() {
       } else {
         const totalImages = resultados[0].count;
         console.log(totalImages);
-        if (totalImages <= 11) {
           
-          const getUserImagePairs = "SELECT userID, imageRoute FROM competitors WHERE date = ?;"
-          con.query(getUserImagePairs, [yesterDateFormatted], (err, results) => { // Obtenemos par imagen-usuario
+        const getUserImagePairs = "SELECT userID, imageRoute FROM competitors WHERE date = ?;"
+        con.query(getUserImagePairs, [yesterDateFormatted], (err, results) => { // Obtenemos par imagen-usuario
 
-            if (err) {
-              console.error(err);
-              reject(err);
-            } else {
-              
-              const userImagePairs = [];
+          if (err) {
+            console.error(err);
+            reject(err);
+          } else {
+            
+            const userImagePairs = [];
 
-              for (const usuarioRow of results) { 
-                for (const imagenRow of results) {
-                  const usuario = usuarioRow.userID;
-                  const image = imagenRow.imageRoute;
-                  const imageSplit = image.split('/');
-                  const imagen = imageSplit[imageSplit.length - 1];
-                  
-                  if (usuario == getFirstPartOfId(imagen)) { // Descartar aquella imagen que pertenezca al propio usuario
-                    continue;
-                  } else {
-                    const presignedUrl = s3Utils.getImageFromS3(imagen);
-                    userImagePairs.push({ usuario, imagen: presignedUrl });
-                  }                
+            let startFlag = false;
+            const maxPic = 10;
+            let actualPic = 0;
+            const totalImagenRows = results.length; // Longitud de resultados
+            
+            usuarioLoop:
+            for (const usuarioRow of results) { 
+              for (let i = 0; i < totalImagenRows; i++) {
+                const imagenRow = results[i];
+                const usuario = usuarioRow.userID;
+                const image = imagenRow.imageRoute;
+                const imageSplit = image.split('/');
+                const imagen = imageSplit[imageSplit.length - 1];
+
+                if (usuario == getFirstPartOfId(imagen) && startFlag == false) { // Encuentra por primera vez la imagen del usuario
+                  startFlag = true;
+
+                  if (i === totalImagenRows - 1) { // Si es última imagen del bucle y primera del usuario
+                    i = -1;
+                  }
+                  continue;
                 }
+                if (actualPic == maxPic || (usuario == getFirstPartOfId(imagen) && startFlag == true)) { // Vuelve a encontrarla o llega al max de fotos a votar
+                  actualPic = 0;
+                  startFlag = false;
+                  break;
+                }
+                if (startFlag == true) {
+                  actualPic += 1;
+          
+                  const presignedUrl = s3Utils.getImageFromS3(imagen);
+                  userImagePairs.push({ usuario, imagen: presignedUrl });
+                }  
+                if (i === totalImagenRows - 1) { // Reinicia bucle interno si llega al final
+                  i = -1;
+                  continue;
+                }           
               }
-              resolve(userImagePairs);
             }
-          });
-        }
+            resolve(userImagePairs);
+          }
+        });
       }
     });
   });
